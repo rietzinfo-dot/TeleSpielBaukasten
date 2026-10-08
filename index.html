@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TeleSpielBaukasten</title>
+<meta name="theme-color" content="#5f626d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 /* Schriften fest eingebaut, keine Verbindung zu fremden Servern.
    Baloo 2: Copyright 2019 The Baloo 2 Project Authors (https://github.com/EkType/Baloo2)
@@ -123,7 +127,7 @@ input#gameName{font:700 16px var(--label);padding:9px 12px;border-radius:10px;bo
 .devfoot #btnTurbo[aria-pressed="true"]{background:var(--gelb)}
 .devfoot button{font:700 10px var(--label);background:rgba(255,255,255,.5);border:0;border-radius:999px;color:#2b2d3a;cursor:pointer;letter-spacing:.08em;padding:6px 9px}
 .note{font-size:15px;color:var(--muted);margin:0}
-.share{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.share{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
 .share code{font-size:12px;background:var(--panel);border:1px solid var(--rule);padding:6px 8px;border-radius:8px;word-break:break-all;max-width:100%}
 @media (prefers-reduced-motion:reduce){.pad:active,.start:active{transform:none}}
 .ende{position:fixed;inset:0;z-index:30;background:rgba(25,26,32,.62);display:flex;align-items:center;justify-content:center;padding:16px}
@@ -195,13 +199,14 @@ body.lade-auf{overflow:hidden}
         <div class="devfoot"><button id="btnSound" type="button" aria-pressed="true">TON: AN</button><button id="btnTurbo" type="button" aria-pressed="false" aria-label="Schwierigkeit umschalten">STUFE 1</button><button id="btnEasy" type="button" aria-pressed="false">ÜBEN: AUS</button></div>
       </div>
       <details class="kasten regeln"><summary><span>Spielbeschreibung</span></summary><p class="note" id="rules" lang="de" style="margin-top:8px;text-align:justify;hyphens:auto;-webkit-hyphens:auto"></p></details>
-      <div class="share"><button class="btn" id="btnShare" type="button">Spiel-Code kopieren</button><code id="shareCode" hidden></code></div>
       <div class="hs">
         <div class="step">Bestenliste</div>
         <ol id="hsList"></ol>
         <button class="lnk" id="hsClear" type="button">Liste leeren</button>
       </div>
-      <p class="note">Keine Anmeldung. Die Bestenliste bleibt nur auf diesem Gerät, dein Spiel steckt ganz im Spiel-Code.</p>
+      <div class="share"><button class="btn go" id="btnInstall" type="button">App installieren</button><button class="btn go" id="btnShare" type="button">Teile mit deinen Freunden</button></div>
+      <p class="note" id="shareNote" role="status" hidden style="text-align:center;max-width:440px"></p>
+      <p class="note">Keine Anmeldung. Die Bestenliste bleibt nur auf diesem Gerät.</p>
     </section>
 
   </div>
@@ -230,7 +235,8 @@ body.lade-auf{overflow:hidden}
       <p>Gemalte Bilder, das Album, der Name des Spiels und die Bestenliste mit den eingetragenen Namen bleiben ausschließlich auf deinem Gerät (lokaler Speicher deines Browsers). Du löschst sie mit „Alles weg“, „Aus dem Album nehmen“ und „Liste leeren“ oder indem du die Browserdaten löschst.</p>
       <p>Die App wird über GitHub Pages (GitHub Inc., USA) ausgeliefert. Beim Aufruf verarbeitet GitHub technisch notwendig deine IP-Adresse, um die Seite zu übertragen und vor Missbrauch zu schützen (Art. 6 Abs. 1 Buchst. f DSGVO). Schriften und alle Programmteile sind in der App selbst enthalten, es wird keine Verbindung zu Google oder anderen Drittanbietern aufgebaut. Was du malst oder spielst, wird nicht übertragen.</p>
       <p>Das Speichern auf deinem Gerät ist nötig, damit Bilder, Album und Bestenliste erhalten bleiben (§ 25 Abs. 2 Nr. 2 TDDDG). Eine Einwilligung ist dafür nicht erforderlich.</p>
-      <p>Mit „Spiel-Code kopieren“ legst du dein Spiel als Text in die Zwischenablage. Weitergegeben wird er nur, wenn du ihn selbst verschickst.</p>
+      <p>Mit „Teile mit deinen Freunden“ gibst du nur den Link zur App weiter. Deine Bilder und deine Bestenliste werden dabei nicht verschickt.</p>
+      <p>Installierst du die App, speichert dein Gerät die Seite, damit sie auch ohne Internet funktioniert.</p>
       <p>Verantwortlich für die Datenverarbeitung ist Marco Rietz (Anschrift siehe oben). Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Widerspruch sowie das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren, zum Beispiel beim Landesbeauftragten für den Datenschutz Sachsen-Anhalt.</p>
       <h4>Lizenzen</h4>
       <p>Schriften: Baloo 2, Copyright 2019 The Baloo 2 Project Authors, und Silkscreen, Copyright 2001 The Silkscreen Project Authors. Beide stehen unter der SIL Open Font License, Version 1.1 (<a href="https://openfontlicense.org" rel="noopener">openfontlicense.org</a>). Alle Figuren und Bilder der App sind selbst gezeichnet.</p>
@@ -510,11 +516,26 @@ const nameIn=$('gameName'),devName=$('devName');
 nameIn.addEventListener('input',()=>{devName.textContent=(nameIn.value.trim()||'MEIN SPIEL').toUpperCase();merke();});
 // Spiel-Code: Name + die drei Bilder mit je 256 Zeichen (_ = leer)
 const enc=p=>p.map(v=>v<0?'_':CH[v]).join(''), dec=t=>t.toLowerCase().split('').map(c=>c==='_'?-1:CH.indexOf(c));
-$('btnShare').onclick=()=>{
-  const code=(nameIn.value.trim()||'MEIN SPIEL').toUpperCase().replace(/[^A-Z0-9-]/g,'')+'.'+enc(store.fig)+'.'+enc(store.top)+'.'+enc(store.item)+'.'+BGCH[bgi];
-  const box=$('shareCode');box.textContent=code;box.hidden=false;const b=$('btnShare');
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(()=>{b.textContent='Kopiert ✓';},()=>{b.textContent='Code unten markieren';});}else{b.textContent='Code unten markieren';}
+// App installieren und Link teilen
+const LINK='https://rietzinfo-dot.github.io/TeleSpielBaukasten/';
+const sag=t=>{const n=$('shareNote');n.textContent=t;n.hidden=false;};
+const alsApp=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+let instFrage=null;
+if(alsApp)$('btnInstall').hidden=true;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();instFrage=e;});
+window.addEventListener('appinstalled',()=>{$('btnInstall').hidden=true;sag('Die App ist installiert. Du findest sie bei deinen Apps.');});
+$('btnInstall').onclick=()=>{
+  if(instFrage){instFrage.prompt();instFrage=null;return;}
+  if(!/github\.io$/.test(location.hostname)){sag('Installieren geht auf der Seite '+LINK.replace('https://',''));return;}
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent))sag('So geht es: Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“.');
+  else sag('So geht es: Öffne das Menü deines Browsers (die drei Punkte) und tippe auf „App installieren“ oder „Zum Startbildschirm hinzufügen“.');
 };
+$('btnShare').onclick=()=>{
+  const d={title:'TeleSpielBaukasten',text:'Fang alles auf, was herunterfällt, und male deine eigene Figur!',url:LINK};
+  if(navigator.share){navigator.share(d).catch(()=>{});return;}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(LINK).then(()=>sag('Link kopiert ✓ Füge ihn in eine Nachricht an deine Freunde ein.'),()=>sag('Der Link: '+LINK));}else sag('Der Link: '+LINK);
+};
+if('serviceWorker' in navigator&&location.protocol==='https:'&&/github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
 function fromHash(){const m=(location.hash||'').slice(1).match(/^([A-Z0-9-]{0,14})\.([0-9a-v_]{256})\.([0-9a-v_]{256})\.([0-9a-v_]{256})(?:\.([0-9a-w]))?$/i);if(!m)return false;
   store={fig:dec(m[2]),top:dec(m[3]),item:dec(m[4])};if(m[1]){nameIn.value=m[1];devName.textContent=m[1].toUpperCase();}if(m[5])setBg(BGCH.indexOf(m[5].toLowerCase()));return true;}
 

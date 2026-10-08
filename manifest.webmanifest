@@ -1,0 +1,33 @@
+{
+ "name": "TeleSpielBaukasten",
+ "short_name": "TeleSpiel",
+ "description": "Fang alles auf, was herunterfällt, und male deine eigene Figur. Ohne Anmeldung.",
+ "lang": "de",
+ "start_url": "./",
+ "scope": "./",
+ "id": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#e8e5da",
+ "theme_color": "#5f626d",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
